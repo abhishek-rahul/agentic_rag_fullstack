@@ -1,0 +1,14 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.0
+python-dotenv==1.0.1
+langchain==0.3.13
+langchain-community==0.3.13
+langchain-core==0.3.28
+langchain-openai==0.2.14
+langchain-ollama==0.2.2
+langgraph==0.2.60
+langchain-text-splitters==0.3.4
+faiss-cpu==1.9.0.post1
+tiktoken==0.8.0
