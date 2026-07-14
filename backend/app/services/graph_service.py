@@ -1,9 +1,12 @@
 from typing import List, TypedDict
 
+from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph import END, StateGraph
+from pydantic import ValidationError
 
 from app.core.config import get_settings
+from app.domain.models import LLMAnswer
 from app.services.llm_gateway import LLMGateway
 from app.services.memory_service import MemoryService
 from app.services.rag_service import RAGService
@@ -20,6 +23,7 @@ class ChatGraphState(TypedDict):
     sources: List[dict]
     answer: str
     best_retrieval_score: float | None
+    generation_error: str | None
 
 
 class GraphService:
@@ -50,17 +54,17 @@ class GraphService:
         state["memory_text"] = self.memory_service.format_for_prompt(memory_messages)
         return state
 
-    def retrieve_context(self, state):
+    def retrieve_context(self, state: ChatGraphState) -> ChatGraphState:
         retrieval_result = self.rag_service.retrieve(state["message"])
 
         state["context"] = retrieval_result.get("context", "")
         state["sources"] = retrieval_result.get("sources", [])
         state["best_retrieval_score"] = retrieval_result.get("best_score")
-
         return state
 
     def _generate_answer(self, state: ChatGraphState) -> ChatGraphState:
         llm = self.llm_gateway.get_chat_model(state["provider"], state.get("model"))
+        structured_llm = llm.with_structured_output(LLMAnswer)
 
         system_prompt = f"""
 You are a helpful company assistant.
@@ -74,24 +78,35 @@ Retrieved context:
 Conversation memory:
 {state['memory_text']}
 """.strip()
-        
-        #print(system_prompt)
 
-        response = llm.invoke(
-            [
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=state["message"]),
-            ]
-        )
-        state["answer"] = response.content
+        try:
+            response = structured_llm.invoke(
+                [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=state["message"]),
+                ]
+            )
+            state["answer"] = response.answer
+            state["generation_error"] = None
+        except (ValidationError, OutputParserException) as exc:
+            state["answer"] = ""
+            state["generation_error"] = str(exc)
+
         return state
 
     def _save_memory(self, state: ChatGraphState) -> ChatGraphState:
+        # Save the user message here. The final assistant response is saved only
+        # after output guardrails run in ChatService.
         self.memory_service.add_message(state["session_id"], "user", state["message"])
-        self.memory_service.add_message(state["session_id"], "assistant", state["answer"])
         return state
 
-    def run(self, message: str, session_id: str, provider: str, model: str | None) -> dict:
+    def run(
+        self,
+        message: str,
+        session_id: str,
+        provider: str,
+        model: str | None,
+    ) -> dict:
         initial_state: ChatGraphState = {
             "message": message,
             "session_id": session_id,
@@ -103,8 +118,9 @@ Conversation memory:
             "sources": [],
             "answer": "",
             "best_retrieval_score": None,
+            "generation_error": None,
         }
         return self.graph.invoke(
             initial_state,
-            config={"recursion_limit": 10}
+            config={"recursion_limit": 10},
         )

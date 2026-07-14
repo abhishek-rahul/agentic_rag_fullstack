@@ -13,6 +13,12 @@ class ChatRequest(BaseModel):
     model: str | None = None
 
 
+class LLMAnswer(BaseModel):
+    """Structured response generated directly by the LLM."""
+
+    answer: str = Field(..., min_length=1)
+
+
 class SourceDocument(BaseModel):
     source: str | None = None
     content_preview: str
@@ -23,7 +29,7 @@ class ChatResponse(BaseModel):
     session_id: str
     provider: Provider
     model: str
-    sources: list[SourceDocument] = []
+    sources: list[SourceDocument] = Field(default_factory=list)
 
 
 class IngestResponse(BaseModel):

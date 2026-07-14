@@ -1,11 +1,11 @@
 from app.core.config import get_settings
+from app.core.logger import logger
 from app.domain.models import ChatRequest, ChatResponse, SourceDocument
 from app.services.graph_service import GraphService
+from app.services.guardrail_service import GuardrailService
+from app.services.logging_service import LoggingService
 from app.services.memory_service import MemoryService
 from app.services.rag_service import RAGService
-from app.services.logging_service import LoggingService
-from app.services.guardrail_service import GuardrailService
-from app.core.logger import logger
 
 
 class ChatService:
@@ -26,15 +26,8 @@ class ChatService:
                 else self.settings.ollama_default_model
             )
 
-        logger.info(
-            "guardrail_enabled=%s",
-            self.settings.guardrail_enabled,
-        )
+        logger.info("guardrail_enabled=%s", self.settings.guardrail_enabled)
 
-        logger.debug(
-            "1. Root endpoint processing start, guardrail_enabled=%s",
-            self.settings.guardrail_enabled,
-        )
         if self.settings.guardrail_enabled:
             request_guardrail = self.guardrail_service.validate_request(
                 provider=request.provider,
@@ -43,7 +36,9 @@ class ChatService:
             )
 
             if not request_guardrail.passed:
-                fallback = self.guardrail_service.fallback_answer(request_guardrail.reason)
+                fallback = self.guardrail_service.fallback_answer(
+                    request_guardrail.reason
+                )
 
                 self.logging_service.log_chat_run({
                     "session_id": request.session_id,
@@ -72,17 +67,6 @@ class ChatService:
             model=selected_model,
         )
 
-    
-        logger.info(
-            "guardrail_enabled=%s",
-            self.settings.guardrail_enabled,
-        )
-
-        logger.debug(
-            "2. Root endpoint processing start, guardrail_enabled=%s",
-            self.settings.guardrail_enabled,
-        )
-
         guardrail_log = {"guardrail_enabled": self.settings.guardrail_enabled}
         if self.settings.guardrail_enabled:
             rag_guardrail = self.guardrail_service.validate_rag_result(result)
@@ -92,10 +76,22 @@ class ChatService:
             })
 
             if not rag_guardrail.passed:
-                result["answer"] = self.guardrail_service.fallback_answer(rag_guardrail.reason)
+                result["answer"] = self.guardrail_service.fallback_answer(
+                    rag_guardrail.reason
+                )
                 result["sources"] = []
 
-        sources = [SourceDocument(**source) for source in result.get("sources", [])]
+        sources = [
+            SourceDocument(**source)
+            for source in result.get("sources", [])
+        ]
+
+        # Save only the final response that is actually returned to the user.
+        self.memory_service.add_message(
+            request.session_id,
+            "assistant",
+            result["answer"],
+        )
 
         self.logging_service.log_chat_run({
             "session_id": request.session_id,
