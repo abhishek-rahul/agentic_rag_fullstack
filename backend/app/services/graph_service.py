@@ -20,6 +20,7 @@ class ChatGraphState(TypedDict):
     memory_messages: List[dict]
     memory_text: str
     context: str
+    contexts: List[str]
     sources: List[dict]
     answer: str
     best_retrieval_score: float | None
@@ -27,11 +28,36 @@ class ChatGraphState(TypedDict):
     llm_response: dict | None
 
 
+DEFAULT_SYSTEM_PROMPT_TEMPLATE = """
+You are a helpful company assistant.
+Use the retrieved company context when it is relevant.
+Use the conversation memory for follow-up questions.
+Keep answers clear, practical, and concise.
+Set grounded_in_context to true only when the answer is directly supported by the retrieved context.
+
+Retrieved context:
+{context}
+
+Conversation memory:
+{memory_text}
+""".strip()
+
+
 class GraphService:
-    def __init__(self, memory_service: MemoryService, rag_service: RAGService):
+    def __init__(
+        self,
+        memory_service: MemoryService,
+        rag_service: RAGService,
+        system_prompt_template: str | None = None,
+    ):
         self.settings = get_settings()
         self.memory_service = memory_service
         self.rag_service = rag_service
+        self.system_prompt_template = (
+            DEFAULT_SYSTEM_PROMPT_TEMPLATE
+            if system_prompt_template is None
+            else system_prompt_template
+        )
         self.llm_gateway = LLMGateway()
         self.graph = self._build_graph()
 
@@ -59,6 +85,7 @@ class GraphService:
         retrieval_result = self.rag_service.retrieve(state["message"])
 
         state["context"] = retrieval_result.get("context", "")
+        state["contexts"] = retrieval_result.get("contexts", [])
         state["sources"] = retrieval_result.get("sources", [])
         state["best_retrieval_score"] = retrieval_result.get("best_score")
         return state
@@ -70,19 +97,10 @@ class GraphService:
             method="json_schema",
         )
 
-        system_prompt = f"""
-You are a helpful company assistant.
-Use the retrieved company context when it is relevant.
-Use the conversation memory for follow-up questions.
-Keep answers clear, practical, and concise.
-Set grounded_in_context to true only when the answer is directly supported by the retrieved context.
-
-Retrieved context:
-{state['context']}
-
-Conversation memory:
-{state['memory_text']}
-""".strip()
+        system_prompt = self.system_prompt_template.format(
+            context=state["context"],
+            memory_text=state["memory_text"],
+        )
 
         try:
             response = structured_llm.invoke(
@@ -127,6 +145,7 @@ Conversation memory:
             "memory_messages": [],
             "memory_text": "",
             "context": "",
+            "contexts": [],
             "sources": [],
             "answer": "",
             "best_retrieval_score": None,

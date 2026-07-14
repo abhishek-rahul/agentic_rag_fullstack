@@ -4,7 +4,7 @@ from app.core.config import get_settings
 from app.core.logger import logger
 from app.domain.models import ChatRequest, ChatResponse, SourceDocument
 from app.services.graph_service import GraphService
-from app.services.guardrail_service import GuardrailService
+from app.services.guardrail_service import GuardrailResult, GuardrailService
 from app.services.logging_service import LoggingService
 from app.services.memory_service import MemoryService
 from app.services.rag_service import RAGService
@@ -18,6 +18,23 @@ class ChatService:
         self.graph_service = GraphService(self.memory_service, self.rag_service)
         self.logging_service = LoggingService()
         self.guardrail_service = GuardrailService()
+
+    def _apply_output_guardrail(
+        self,
+        result: dict,
+    ) -> tuple[dict, GuardrailResult]:
+        safe_result = dict(result)
+        guardrail_result = self.guardrail_service.validate_rag_result(safe_result)
+
+        if not guardrail_result.passed:
+            safe_result["answer"] = self.guardrail_service.fallback_answer(
+                guardrail_result.reason,
+                guardrail_result.failure_type,
+            )
+            safe_result["sources"] = []
+            safe_result["llm_response"] = None
+
+        return safe_result, guardrail_result
 
     def chat(self, request: ChatRequest) -> ChatResponse:
         selected_model = request.model
@@ -77,20 +94,12 @@ class ChatService:
             "generation_error": result.get("generation_error"),
         }
         if self.settings.guardrail_enabled:
-            rag_guardrail = self.guardrail_service.validate_rag_result(result)
+            result, rag_guardrail = self._apply_output_guardrail(result)
             guardrail_log.update({
                 "guardrail_passed": rag_guardrail.passed,
                 "guardrail_reason": rag_guardrail.reason,
                 "guardrail_failure_type": rag_guardrail.failure_type,
             })
-
-            if not rag_guardrail.passed:
-                result["answer"] = self.guardrail_service.fallback_answer(
-                    rag_guardrail.reason,
-                    rag_guardrail.failure_type,
-                )
-                result["sources"] = []
-                result["llm_response"] = None
 
         sources = [
             SourceDocument(**source)
