@@ -102,6 +102,12 @@ def test_answer_contains_expected_keywords(
             )
         raise
 
+    print(
+        f"\nCase: {test_case['id']}"
+        f"\nQuestion: {test_case['question']}"
+        f"\nActual answer: {response.answer}\n"
+    )
+
     assert response.answer.strip(), (
         f"Expected a non-empty answer for '{test_case['question']}'"
     )

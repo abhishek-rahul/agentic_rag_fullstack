@@ -21,3 +21,4 @@ frontend/.env
 
 
 backend/data/logs/*
+backend/.env.example
