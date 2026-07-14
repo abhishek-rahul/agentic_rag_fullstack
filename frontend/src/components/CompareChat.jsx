@@ -30,6 +30,7 @@ function createAssistantMessage(result) {
     role: "assistant",
     content: result.answer || "No answer returned.",
     sources: result.sources || [],
+    llmResponse: result.llm_response || null,
   };
 }
 
@@ -38,6 +39,7 @@ function createErrorMessage(error) {
     role: "assistant",
     content: `Error: ${error.message}`,
     sources: [],
+    llmResponse: null,
     isError: true,
   };
 }
