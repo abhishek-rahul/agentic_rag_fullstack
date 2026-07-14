@@ -6,6 +6,7 @@ from langgraph.graph import END, StateGraph
 from pydantic import ValidationError
 
 from app.core.config import get_settings
+from app.core.logger import logger
 from app.domain.models import LLMAnswer
 from app.services.llm_gateway import LLMGateway
 from app.services.memory_service import MemoryService
@@ -24,6 +25,7 @@ class ChatGraphState(TypedDict):
     answer: str
     best_retrieval_score: float | None
     generation_error: str | None
+    llm_response: dict | None
 
 
 class GraphService:
@@ -64,13 +66,17 @@ class GraphService:
 
     def _generate_answer(self, state: ChatGraphState) -> ChatGraphState:
         llm = self.llm_gateway.get_chat_model(state["provider"], state.get("model"))
-        structured_llm = llm.with_structured_output(LLMAnswer)
+        structured_llm = llm.with_structured_output(
+            LLMAnswer,
+            method="json_schema",
+        )
 
         system_prompt = f"""
 You are a helpful company assistant.
 Use the retrieved company context when it is relevant.
 Use the conversation memory for follow-up questions.
 Keep answers clear, practical, and concise.
+Set grounded_in_context to true only when the answer is directly supported by the retrieved context.
 
 Retrieved context:
 {state['context']}
@@ -86,10 +92,18 @@ Conversation memory:
                     HumanMessage(content=state["message"]),
                 ]
             )
+            if response is None:
+                raise OutputParserException(
+                    "Model did not return a valid structured response"
+                )
+
+            logger.info("llm_structured_response=%s", response.model_dump_json())
             state["answer"] = response.answer
+            state["llm_response"] = response.model_dump()
             state["generation_error"] = None
         except (ValidationError, OutputParserException) as exc:
             state["answer"] = ""
+            state["llm_response"] = None
             state["generation_error"] = str(exc)
 
         return state
@@ -119,6 +133,7 @@ Conversation memory:
             "answer": "",
             "best_retrieval_score": None,
             "generation_error": None,
+            "llm_response": None,
         }
         return self.graph.invoke(
             initial_state,

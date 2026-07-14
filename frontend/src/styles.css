@@ -238,6 +238,33 @@ select:focus {
   font-weight: 700;
 }
 
+.json-response {
+  margin-top: 14px;
+  border-top: 1px solid #334155;
+  padding-top: 12px;
+}
+
+.json-response-title {
+  margin-bottom: 8px;
+  color: #86efac;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.json-response pre {
+  margin: 0;
+  padding: 10px;
+  overflow-x: auto;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #050b18;
+  color: #bbf7d0;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
 .sources {
   margin-top: 14px;
   border-top: 1px solid #334155;

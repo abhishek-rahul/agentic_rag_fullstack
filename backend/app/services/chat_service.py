@@ -80,6 +80,7 @@ class ChatService:
                     rag_guardrail.reason
                 )
                 result["sources"] = []
+                result["llm_response"] = None
 
         sources = [
             SourceDocument(**source)
@@ -100,6 +101,7 @@ class ChatService:
             "user_message": request.message,
             "answer": result.get("answer", ""),
             "sources": result.get("sources", []),
+            "llm_response": result.get("llm_response"),
             **guardrail_log,
         })
 
@@ -109,4 +111,5 @@ class ChatService:
             provider=request.provider,
             model=selected_model,
             sources=sources,
+            llm_response=result.get("llm_response"),
         )

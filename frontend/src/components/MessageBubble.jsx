@@ -14,6 +14,13 @@ export default function MessageBubble({ message }) {
         <div className="message-role">{isUser ? "You" : "Assistant"}</div>
         <div className="message-content">{message.content}</div>
 
+        {!isUser && message.llmResponse && (
+          <div className="json-response">
+            <div className="json-response-title">LLM JSON Response</div>
+            <pre>{JSON.stringify(message.llmResponse, null, 2)}</pre>
+          </div>
+        )}
+
         {!isUser && message.sources?.length > 0 && (
           <div className="sources">
             <div className="sources-title">Sources</div>
