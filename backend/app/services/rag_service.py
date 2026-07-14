@@ -4,7 +4,7 @@ from app.infrastructure.vector_store import LocalVectorStore
 class RAGService:
     def __init__(self):
         self.vector_store = LocalVectorStore()
-        #self.min_relevance_score = 1.2
+        self.min_relevance_score = 1.2
 
     def ingest_documents(self) -> tuple[int, int]:
         return self.vector_store.ingest()
@@ -30,14 +30,10 @@ class RAGService:
 
         filtered_docs = []
 
-        ##for doc, score in docs_with_scores:
-        ##    if score <= self.min_relevance_score:
-        ##        filtered_docs.append((doc, score))
-
         for doc, score in docs_with_scores:
-            print("score is -- " + str(score))
-        ##  if score <= self.min_relevance_score:
-            filtered_docs.append((doc, score))
+            #print("score is -- " + str(score))
+            if score <= self.min_relevance_score:
+                filtered_docs.append((doc, score))
 
         if not filtered_docs:
             return {

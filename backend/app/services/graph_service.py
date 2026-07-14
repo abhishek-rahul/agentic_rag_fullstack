@@ -19,6 +19,7 @@ class ChatGraphState(TypedDict):
     context: str
     sources: List[dict]
     answer: str
+    best_retrieval_score: float | None
 
 
 class GraphService:
@@ -74,7 +75,7 @@ Conversation memory:
 {state['memory_text']}
 """.strip()
         
-        print(system_prompt)
+        #print(system_prompt)
 
         response = llm.invoke(
             [
@@ -101,6 +102,7 @@ Conversation memory:
             "context": "",
             "sources": [],
             "answer": "",
+            "best_retrieval_score": None,
         }
         return self.graph.invoke(
             initial_state,

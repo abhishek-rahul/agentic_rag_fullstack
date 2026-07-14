@@ -5,6 +5,7 @@ from app.services.memory_service import MemoryService
 from app.services.rag_service import RAGService
 from app.services.logging_service import LoggingService
 from app.services.guardrail_service import GuardrailService
+from app.core.logger import logger
 
 
 class ChatService:
@@ -25,6 +26,15 @@ class ChatService:
                 else self.settings.ollama_default_model
             )
 
+        logger.info(
+            "guardrail_enabled=%s",
+            self.settings.guardrail_enabled,
+        )
+
+        logger.debug(
+            "1. Root endpoint processing start, guardrail_enabled=%s",
+            self.settings.guardrail_enabled,
+        )
         if self.settings.guardrail_enabled:
             request_guardrail = self.guardrail_service.validate_request(
                 provider=request.provider,
@@ -60,6 +70,17 @@ class ChatService:
             session_id=request.session_id,
             provider=request.provider,
             model=selected_model,
+        )
+
+    
+        logger.info(
+            "guardrail_enabled=%s",
+            self.settings.guardrail_enabled,
+        )
+
+        logger.debug(
+            "2. Root endpoint processing start, guardrail_enabled=%s",
+            self.settings.guardrail_enabled,
         )
 
         guardrail_log = {"guardrail_enabled": self.settings.guardrail_enabled}

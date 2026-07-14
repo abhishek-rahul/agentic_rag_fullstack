@@ -33,8 +33,8 @@ class GuardrailService:
         if best_score is None:
             return GuardrailResult(False, "No retrieval score found")
         
-        ##if best_score > 1.2:
-        ##    return GuardrailResult(False, f"Retrieved context is not relevant enough. Score={best_score}")
+        if best_score > 1.2:
+            return GuardrailResult(False, f"Retrieved context is not relevant enough. Score={best_score}")
         
         if not context or not context.strip():
             return GuardrailResult(False, "No relevant context found")
