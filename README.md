@@ -12,7 +12,10 @@ A complete local-first full-stack GenAI project with:
 - OpenAI chat model support
 - Ollama local chat model support
 
-This project intentionally does **not** include guardrails, evals, scoring, benchmarking, LLM-as-judge, RAG evaluation, agent evaluation, promptfoo, DeepEval, Ragas, TruLens, LangSmith evals, OpenAI evals, or any safety/evaluation system. It is focused only on the core GenAI application workflow.
+This project includes optional request and RAG-result guardrails controlled by
+`GUARDRAIL_ENABLED`. It does **not** include evals, scoring, benchmarking,
+LLM-as-judge, RAG evaluation, agent evaluation, promptfoo, DeepEval, Ragas,
+TruLens, LangSmith evals, or OpenAI evals.
 
 ## Project structure
 

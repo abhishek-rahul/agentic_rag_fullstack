@@ -36,6 +36,7 @@ class RAGService:
 
         for doc, score in docs_with_scores:
             print("score is -- " + str(score))
+        ##  if score <= self.min_relevance_score:
             filtered_docs.append((doc, score))
 
         if not filtered_docs:
