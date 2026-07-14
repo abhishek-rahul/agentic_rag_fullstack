@@ -2,8 +2,9 @@
 
 FastAPI backend with LangChain, LangGraph, FAISS, SQLite memory, OpenAI support, and Ollama support.
 
-This backend includes optional request and RAG-result guardrails. It does not
-include evals, scoring, a test harness, benchmarking, or an evaluation layer.
+This backend includes optional request and RAG-result guardrails plus a small
+local regression test suite. It does not include an external evaluation
+framework, scoring system, or benchmarking layer.
 
 ## Setup
 
@@ -51,6 +52,49 @@ guardrail checks, set this in `backend/.env` and restart the backend:
 ```bash
 GUARDRAIL_ENABLED=false
 ```
+
+## Local Guardrail and Regression Tests
+
+The reusable regression dataset is stored at:
+
+```text
+app/data/eval_dataset.json
+```
+
+The test suite contains:
+
+- Deterministic guardrail tests for PII, schema failures, fallbacks, and safe
+  memory behavior.
+- Retrieval tests for all dataset cases. These tests do not call a chat LLM,
+  but they use the configured embedding provider. If the local FAISS index is
+  missing, the tests build it once from `app/data/docs`.
+- Answer keyword tests for six representative positive cases. These tests call
+  the provider and model configured by `TEST_LLM_PROVIDER` and
+  `TEST_LLM_MODEL`.
+
+For the default local setup, start Ollama and make sure both models are present:
+
+```bash
+ollama serve
+ollama pull qwen2.5:0.5b
+ollama pull nomic-embed-text:latest
+```
+
+Install dependencies and run the tests from the backend folder:
+
+```bash
+cd backend
+pip install -r requirements.txt
+
+pytest tests/test_guardrails.py -v
+pytest tests/test_retrieval.py -v
+pytest -m llm -v
+pytest -m "not llm" -v
+```
+
+Live-LLM tests use a unique session ID and isolated in-memory test state for
+every case. They do not write to or clear the existing SQLite memory database
+or chat logs.
 
 ## API endpoints
 

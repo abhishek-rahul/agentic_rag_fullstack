@@ -1,3 +1,5 @@
+import json
+
 from app.core.config import get_settings
 from app.core.logger import logger
 from app.domain.models import ChatRequest, ChatResponse, SourceDocument
@@ -37,7 +39,8 @@ class ChatService:
 
             if not request_guardrail.passed:
                 fallback = self.guardrail_service.fallback_answer(
-                    request_guardrail.reason
+                    request_guardrail.reason,
+                    request_guardrail.failure_type,
                 )
 
                 self.logging_service.log_chat_run({
@@ -50,6 +53,8 @@ class ChatService:
                     "guardrail_enabled": True,
                     "guardrail_passed": False,
                     "guardrail_reason": request_guardrail.reason,
+                    "guardrail_failure_type": request_guardrail.failure_type,
+                    "generation_error": None,
                 })
 
                 return ChatResponse(
@@ -67,17 +72,22 @@ class ChatService:
             model=selected_model,
         )
 
-        guardrail_log = {"guardrail_enabled": self.settings.guardrail_enabled}
+        guardrail_log = {
+            "guardrail_enabled": self.settings.guardrail_enabled,
+            "generation_error": result.get("generation_error"),
+        }
         if self.settings.guardrail_enabled:
             rag_guardrail = self.guardrail_service.validate_rag_result(result)
             guardrail_log.update({
                 "guardrail_passed": rag_guardrail.passed,
                 "guardrail_reason": rag_guardrail.reason,
+                "guardrail_failure_type": rag_guardrail.failure_type,
             })
 
             if not rag_guardrail.passed:
                 result["answer"] = self.guardrail_service.fallback_answer(
-                    rag_guardrail.reason
+                    rag_guardrail.reason,
+                    rag_guardrail.failure_type,
                 )
                 result["sources"] = []
                 result["llm_response"] = None
@@ -86,6 +96,16 @@ class ChatService:
             SourceDocument(**source)
             for source in result.get("sources", [])
         ]
+
+        safe_llm_response = (
+            result.get("llm_response")
+            if self.settings.guardrail_enabled
+            else None
+        )
+        logger.info(
+            "safe_llm_response=%s",
+            json.dumps(safe_llm_response, ensure_ascii=False),
+        )
 
         # Save only the final response that is actually returned to the user.
         self.memory_service.add_message(

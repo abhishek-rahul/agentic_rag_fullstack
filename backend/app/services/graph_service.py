@@ -6,7 +6,6 @@ from langgraph.graph import END, StateGraph
 from pydantic import ValidationError
 
 from app.core.config import get_settings
-from app.core.logger import logger
 from app.domain.models import LLMAnswer
 from app.services.llm_gateway import LLMGateway
 from app.services.memory_service import MemoryService
@@ -97,7 +96,6 @@ Conversation memory:
                     "Model did not return a valid structured response"
                 )
 
-            logger.info("llm_structured_response=%s", response.model_dump_json())
             state["answer"] = response.answer
             state["llm_response"] = response.model_dump()
             state["generation_error"] = None
