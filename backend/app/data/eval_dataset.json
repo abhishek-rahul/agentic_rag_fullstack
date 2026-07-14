@@ -1,0 +1,132 @@
+[
+  {
+    "id": "wfh-001",
+    "question": "Can employees work from home?",
+    "expected_source": "work_from_home_policy.txt",
+    "expected_keywords": [
+      "two days",
+      "manager approval"
+    ],
+    "category": "work_from_home",
+    "should_find_context": true,
+    "run_answer_test": true
+  },
+  {
+    "id": "wfh-002",
+    "question": "Are employees permitted to perform their jobs remotely?",
+    "expected_source": "work_from_home_policy.txt",
+    "expected_keywords": [
+      "role",
+      "remotely"
+    ],
+    "category": "work_from_home_paraphrase",
+    "should_find_context": true,
+    "run_answer_test": false
+  },
+  {
+    "id": "wfh-003",
+    "question": "Whose approval is required before working from home?",
+    "expected_source": "work_from_home_policy.txt",
+    "expected_keywords": [
+      "manager approval"
+    ],
+    "category": "work_from_home_approval",
+    "should_find_context": true,
+    "run_answer_test": true
+  },
+  {
+    "id": "wfh-004",
+    "question": "How many days per week can employees work from home?",
+    "expected_source": "work_from_home_policy.txt",
+    "expected_keywords": [
+      "two days"
+    ],
+    "category": "work_from_home_days",
+    "should_find_context": true,
+    "run_answer_test": false
+  },
+  {
+    "id": "wfh-005",
+    "question": "What are the core working hours for remote employees?",
+    "expected_source": "work_from_home_policy.txt",
+    "expected_keywords": [
+      "10:00 AM",
+      "5:00 PM"
+    ],
+    "category": "work_from_home_hours",
+    "should_find_context": true,
+    "run_answer_test": true
+  },
+  {
+    "id": "wfh-006",
+    "question": "Who must approve long-term or full-time remote work?",
+    "expected_source": "work_from_home_policy.txt",
+    "expected_keywords": [
+      "HR",
+      "reporting manager"
+    ],
+    "category": "work_from_home_full_time",
+    "should_find_context": true,
+    "run_answer_test": true
+  },
+  {
+    "id": "refund-001",
+    "question": "How long do customers have to request a refund?",
+    "expected_source": "sample_company_policy.txt",
+    "expected_keywords": [
+      "30 days"
+    ],
+    "category": "refund_window",
+    "should_find_context": true,
+    "run_answer_test": true
+  },
+  {
+    "id": "refund-002",
+    "question": "Where is an approved refund sent?",
+    "expected_source": "sample_company_policy.txt",
+    "expected_keywords": [
+      "original payment method"
+    ],
+    "category": "refund_method",
+    "should_find_context": true,
+    "run_answer_test": true
+  },
+  {
+    "id": "warranty-001",
+    "question": "What type of damage does the product warranty cover?",
+    "expected_source": "sample_company_policy.txt",
+    "expected_keywords": [
+      "manufacturing defects"
+    ],
+    "category": "warranty_coverage",
+    "should_find_context": true,
+    "run_answer_test": false
+  },
+  {
+    "id": "negative-person-001",
+    "question": "Who was Marie Curie?",
+    "expected_source": null,
+    "expected_keywords": [],
+    "category": "person_not_in_documents",
+    "should_find_context": false,
+    "run_answer_test": false
+  },
+  {
+    "id": "negative-general-001",
+    "question": "What is the capital of France?",
+    "expected_source": null,
+    "expected_keywords": [],
+    "category": "general_knowledge",
+    "should_find_context": false,
+    "run_answer_test": false
+  },
+  {
+    "id": "negative-unrelated-001",
+    "question": "How do I bake a chocolate cake?",
+    "expected_source": null,
+    "expected_keywords": [],
+    "category": "unrelated_topic",
+    "should_find_context": false,
+    "run_answer_test": false
+  }
+]

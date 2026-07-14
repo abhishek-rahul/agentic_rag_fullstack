@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     retriever_k: int = 4
     short_term_turns: int = 6
     guardrail_enabled: bool = True
+    test_llm_provider: str = "ollama"
+    test_llm_model: str = "qwen2.5:0.5b"
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR.parent / ".env",
