@@ -32,7 +32,7 @@ class GraphService:
     def _build_graph(self):
         graph = StateGraph(ChatGraphState)
         graph.add_node("load_memory", self._load_memory)
-        graph.add_node("retrieve_context", self._retrieve_context)
+        graph.add_node("retrieve_context", self.retrieve_context)
         graph.add_node("generate_answer", self._generate_answer)
         graph.add_node("save_memory", self._save_memory)
 
@@ -49,10 +49,13 @@ class GraphService:
         state["memory_text"] = self.memory_service.format_for_prompt(memory_messages)
         return state
 
-    def _retrieve_context(self, state: ChatGraphState) -> ChatGraphState:
-        context, sources = self.rag_service.retrieve(state["message"])
-        state["context"] = context or "No indexed context found. You may answer from general knowledge and say when company docs were not available."
-        state["sources"] = sources
+    def retrieve_context(self, state):
+        retrieval_result = self.rag_service.retrieve(state["message"])
+
+        state["context"] = retrieval_result.get("context", "")
+        state["sources"] = retrieval_result.get("sources", [])
+        state["best_retrieval_score"] = retrieval_result.get("best_score")
+
         return state
 
     def _generate_answer(self, state: ChatGraphState) -> ChatGraphState:
@@ -70,6 +73,8 @@ Retrieved context:
 Conversation memory:
 {state['memory_text']}
 """.strip()
+        
+        print(system_prompt)
 
         response = llm.invoke(
             [
