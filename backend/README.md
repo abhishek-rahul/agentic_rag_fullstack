@@ -2,7 +2,8 @@
 
 FastAPI backend with LangChain, LangGraph, FAISS, SQLite memory, OpenAI support, and Ollama support.
 
-This backend intentionally contains no guardrails, evals, scoring, test harness, benchmarking, or safety evaluation layer. It focuses only on the core GenAI workflow.
+This backend includes optional request and RAG-result guardrails. It does not
+include evals, scoring, a test harness, benchmarking, or an evaluation layer.
 
 ## Setup
 
@@ -40,6 +41,15 @@ EMBEDDINGS_PROVIDER=openai   # optional, only if you want OpenAI embeddings
 
 ```bash
 uvicorn app.main:app --reload --port 8000
+```
+
+## Guardrail feature flag
+
+Guardrails are enabled by default. To bypass both request and RAG-result
+guardrail checks, set this in `backend/.env` and restart the backend:
+
+```bash
+GUARDRAIL_ENABLED=false
 ```
 
 ## API endpoints

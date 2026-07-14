@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     chunk_overlap: int = 120
     retriever_k: int = 4
     short_term_turns: int = 6
+    guardrail_enabled: bool = True
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR.parent / ".env",
