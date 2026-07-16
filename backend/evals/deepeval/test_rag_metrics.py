@@ -6,9 +6,8 @@ import pytest
 from dotenv import load_dotenv
 
 from deepeval import assert_test
-from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
-from deepeval.test_case import LLMTestCase
 
+from evals.deepeval.run_deepeval import build_metrics, build_test_case
 from evals.shared import BACKEND_DIR, load_record_envelope
 
 
@@ -36,20 +35,8 @@ def test_rag_metrics(record: dict) -> None:
     if not os.getenv("OPENAI_API_KEY"):
         pytest.skip("OPENAI_API_KEY is required for the DeepEval judge")
 
-    assert record["generation_error"] is None
-    assert record["guardrail"]["passed"] is True
-    assert record["raw_answer"]
-    assert record["contexts"]
-
-    test_case = LLMTestCase(
-        input=record["question"],
-        actual_output=record["raw_answer"],
-        retrieval_context=record["contexts"],
-    )
+    test_case = build_test_case(record)
     assert_test(
         test_case,
-        [
-            FaithfulnessMetric(threshold=THRESHOLD, model=JUDGE_MODEL),
-            AnswerRelevancyMetric(threshold=THRESHOLD, model=JUDGE_MODEL),
-        ],
+        build_metrics(JUDGE_MODEL, THRESHOLD),
     )

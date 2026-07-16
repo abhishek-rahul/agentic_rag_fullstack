@@ -5,6 +5,10 @@ FastAPI backend with LangChain, LangGraph, FAISS, SQLite memory, OpenAI support,
 This backend includes optional request and RAG-result guardrails, deterministic
 regression tests, and isolated DeepEval, Ragas, and Promptfoo evaluations.
 
+The current application is a fixed RAG workflow. The tool guardrails described
+below are reusable foundations for a future agent; the current LLM does not
+dynamically select or execute tools.
+
 ## Setup
 
 ```bash
@@ -191,6 +195,114 @@ under `eval_results/promptfoo`.
 .\.venv\Scripts\python.exe -m pytest tests/test_retrieval.py -v
 .\.venv\Scripts\python.exe -m pytest -m "not llm" -v
 .\.venv\Scripts\python.exe -m pytest -m llm -v
+```
+
+## Step 12: Agent/tool guardrails
+
+The current `/chat` flow remains unchanged. `app/agents/tool_guardrails.py`
+provides an isolated tool execution boundary that a future agent can reuse:
+
+```text
+ToolCallRequest
+  -> allowlist
+  -> Pydantic argument validation
+  -> safe / approval_required / blocked policy
+  -> maximum-step check
+  -> repeated-call check
+  -> execute or safely block
+```
+
+The default registry exposes only `search_company_documents`, which wraps the
+existing read-only RAG retrieval service. Email, deletion, shell, file-writing,
+and purchasing tools are not implemented. Approval-required and blocked tools
+are represented only by fake handlers in deterministic tests.
+
+Tool execution limits are local to one execution state:
+
+```env
+AGENT_MAX_STEPS=3
+AGENT_MAX_REPEAT_CALLS=1
+```
+
+`AGENT_MAX_STEPS` is a business/tool policy. LangGraph's `recursion_limit` is a
+separate technical graph-safety limit. With the default repeat value, a second
+call using the same tool and normalized arguments is blocked.
+
+Run the deterministic tests:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/test_tool_guardrails.py -v
+```
+
+These tests use hand-written fake tools and never call a chat LLM, FAISS,
+SQLite, DeepEval, Ragas, or Promptfoo.
+
+## Step 13: Local evaluation gate
+
+The gate answers whether the application is ready for the next configured
+local stage. It is not a production certification.
+
+Local mode requires deterministic guardrail, retrieval, and tool-guardrail
+tests plus four fresh shared records. A local Ollama Promptfoo report is shown
+as an optional warning and cannot block readiness:
+
+```powershell
+.\.venv\Scripts\python.exe -m evals.generate_records
+.\.venv\Scripts\python.exe -m evals.gate --mode local
+```
+
+Full mode additionally requires live keyword tests, DeepEval, Ragas, and the
+16-result Promptfoo comparison. The gate reads their existing reports; it does
+not run judges, Ragas, Promptfoo, or record generation automatically.
+
+Generate the external-judge reports explicitly:
+
+```powershell
+.\.venv-evals\Scripts\python.exe -m evals.deepeval.run_deepeval
+.\.venv-evals\Scripts\python.exe -m evals.ragas.run_ragas
+```
+
+These two commands send the selected questions, answers, reference data, and
+retrieved context to the configured judge. They require explicit operator
+intent, network access, and valid credentials.
+
+Generate the full Promptfoo report:
+
+```powershell
+cd evals\promptfoo
+$env:PROMPTFOO_PYTHON = (Resolve-Path '..\..\.venv\Scripts\python.exe').Path
+npm run eval:all
+cd ..\..
+```
+
+Then run:
+
+```powershell
+.\.venv\Scripts\python.exe -m evals.gate --mode full
+```
+
+Gate policy defaults:
+
+```env
+EVAL_REPORT_MAX_AGE_HOURS=24
+EVAL_MIN_RAGAS_FAITHFULNESS=0.6
+EVAL_MIN_RAGAS_CONTEXT_PRECISION=0.6
+EVAL_MIN_PROMPTFOO_PASS_RATE=0.75
+```
+
+Required missing, malformed, metadata-mismatched, or stale reports make the
+gate `NOT READY`. Optional failures appear as warnings. Reports are written to:
+
+```text
+eval_results/gate/latest.json
+eval_results/gate/latest.md
+```
+
+Exit codes are `0` for ready, `1` for failed required checks, and `2` for gate
+configuration or execution errors. Run its deterministic unit tests with:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/test_eval_gate.py -v
 ```
 
 ## API endpoints

@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     retriever_k: int = 4
     short_term_turns: int = 6
     guardrail_enabled: bool = True
+    agent_max_steps: int = 3
+    agent_max_repeat_calls: int = 1
     test_llm_provider: str = "ollama"
     test_llm_model: str = "qwen2.5:0.5b"
 
