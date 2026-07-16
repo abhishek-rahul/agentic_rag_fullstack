@@ -15,6 +15,7 @@ class RAGService:
         if store is None:
             return {
                 "context": "",
+                "contexts": [],
                 "sources": [],
                 "best_score": None,
             }
@@ -24,6 +25,7 @@ class RAGService:
         if not docs_with_scores:
             return {
                 "context": "",
+                "contexts": [],
                 "sources": [],
                 "best_score": None,
             }
@@ -38,11 +40,13 @@ class RAGService:
         if not filtered_docs:
             return {
                 "context": "",
+                "contexts": [],
                 "sources": [],
                 "best_score": float(docs_with_scores[0][1]),
             }
 
-        context = "\n\n".join([doc.page_content for doc, score in filtered_docs])
+        contexts = [doc.page_content for doc, score in filtered_docs]
+        context = "\n\n".join(contexts)
 
         sources = []
         for doc, score in filtered_docs:
@@ -54,6 +58,7 @@ class RAGService:
 
         return {
             "context": context,
+            "contexts": contexts,
             "sources": sources,
             "best_score": float(filtered_docs[0][1]),
         }

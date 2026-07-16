@@ -9,7 +9,9 @@
     ],
     "category": "work_from_home",
     "should_find_context": true,
-    "run_answer_test": true
+    "run_answer_test": true,
+    "run_core_eval": true,
+    "reference_answer": "Employees may work from home up to two days per week with manager approval."
   },
   {
     "id": "wfh-002",
@@ -55,7 +57,9 @@
     ],
     "category": "work_from_home_hours",
     "should_find_context": true,
-    "run_answer_test": true
+    "run_answer_test": true,
+    "run_core_eval": true,
+    "reference_answer": "Core working hours for remote employees are 10:00 AM to 5:00 PM."
   },
   {
     "id": "wfh-006",
@@ -78,7 +82,9 @@
     ],
     "category": "refund_window",
     "should_find_context": true,
-    "run_answer_test": true
+    "run_answer_test": true,
+    "run_core_eval": true,
+    "reference_answer": "Customers can request a refund within 30 days of purchase."
   },
   {
     "id": "refund-002",
@@ -89,7 +95,9 @@
     ],
     "category": "refund_method",
     "should_find_context": true,
-    "run_answer_test": true
+    "run_answer_test": true,
+    "run_core_eval": true,
+    "reference_answer": "Approved refunds are processed back to the original payment method."
   },
   {
     "id": "warranty-001",

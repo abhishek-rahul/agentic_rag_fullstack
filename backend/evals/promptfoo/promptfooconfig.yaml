@@ -1,0 +1,27 @@
+description: Local application-level RAG prompt comparison
+sharing: false
+env:
+  PROMPTFOO_DISABLE_TELEMETRY: "1"
+
+prompts:
+  - file://prompts/production.txt
+  - file://prompts/strict_grounded.txt
+
+providers:
+  - id: file://provider.py:call_api
+    label: ollama-qwen2.5-0.5b
+    config:
+      app_provider: ollama
+      app_model: qwen2.5:0.5b
+  - id: file://provider.py:call_api
+    label: openai-gpt-4o-mini
+    config:
+      app_provider: openai
+      app_model: gpt-4o-mini
+
+tests:
+  - file://provider.py:generate_tests
+
+outputPath:
+  - ../../eval_results/promptfoo/latest.json
+  - ../../eval_results/promptfoo/latest.html

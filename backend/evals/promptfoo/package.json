@@ -1,0 +1,12 @@
+{
+  "name": "agentic-rag-promptfoo-evals",
+  "private": true,
+  "scripts": {
+    "validate": "set PROMPTFOO_CONFIG_DIR=.promptfoo&& set PROMPTFOO_DISABLE_TELEMETRY=1&& promptfoo validate config -c promptfooconfig.yaml",
+    "eval:local": "set PROMPTFOO_CONFIG_DIR=.promptfoo&& set PROMPTFOO_DISABLE_TELEMETRY=1&& promptfoo eval -c promptfooconfig.yaml --filter-providers ollama-qwen2.5-0.5b --no-cache --max-concurrency 1",
+    "eval:all": "set PROMPTFOO_CONFIG_DIR=.promptfoo&& set PROMPTFOO_DISABLE_TELEMETRY=1&& promptfoo eval -c promptfooconfig.yaml --no-cache --max-concurrency 1"
+  },
+  "devDependencies": {
+    "promptfoo": "0.121.18"
+  }
+}
