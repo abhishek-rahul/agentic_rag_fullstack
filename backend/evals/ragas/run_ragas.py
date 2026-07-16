@@ -45,7 +45,8 @@ def main() -> int:
     if not os.getenv("OPENAI_API_KEY"):
         raise SystemExit("OPENAI_API_KEY is required for the Ragas judge")
 
-    records = load_record_envelope()["records"]
+    envelope = load_record_envelope()
+    records = envelope["records"]
     if args.case_id:
         records = [record for record in records if record["id"] == args.case_id]
         if not records:
@@ -84,8 +85,14 @@ def main() -> int:
         ),
     }
     report = {
+        "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "judge_model": judge_model,
+        "source_records_generated_at": envelope["generated_at"],
+        "generation_provider": envelope["generation_provider"],
+        "generation_model": envelope["generation_model"],
+        "prompt_variant": envelope["prompt_variant"],
+        "case_count": len(rows),
         "records": rows,
         "averages": averages,
     }
